@@ -16,7 +16,7 @@
                    Margin="0,0,0,15"/>
 
         <!-- Table -->
-        <ItemsControl Grid.Row="1">
+        <ItemsControl ItemsSource="{Binding Channels}" Grid.Row="1">
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>

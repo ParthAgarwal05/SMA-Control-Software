@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SMAControlApp.Models
 {
-    class ActuatorChannel
+    public class ActuatorChannel
     {
         public int ChannelId { get; set; }
         public double DesiredDisplacement { get; set; }
