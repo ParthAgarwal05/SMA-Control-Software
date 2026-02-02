@@ -1,13 +1,54 @@
 ﻿<UserControl x:Class="SMAControlApp.Views.ClosedLoopView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:SMAControlApp.Views">
-    <Grid>
-        <TextBlock Text="Closed Loop View"
-           FontSize="20"
-           HorizontalAlignment="Center"
-           VerticalAlignment="Center"/>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="20">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Text="Closed Loop Control"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   Margin="0,0,0,15"/>
+
+        <!-- Table -->
+        <ItemsControl Grid.Row="1">
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="200"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Channel 1"
+                                   VerticalAlignment="Center"/>
+
+                        <TextBox Grid.Column="1"
+                                 Height="25"
+                                 Margin="5"
+                                 Text="Enter displacement"/>
+
+                        <ToggleButton Grid.Column="2"
+                                      Content="Start"
+                                      Width="80"
+                                      Height="25"/>
+
+                        <TextBlock Grid.Column="3"
+                                   Text="Current: 0.0 mm"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+
+        </ItemsControl>
+
     </Grid>
 </UserControl>
