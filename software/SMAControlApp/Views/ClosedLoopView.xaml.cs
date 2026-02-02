@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SMAControlApp.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -21,6 +22,7 @@ namespace SMAControlApp.Views
         public ClosedLoopView()
         {
             InitializeComponent();
+            DataContext = new ClosedLoopViewModel();
         }
     }
 }
