@@ -14,7 +14,7 @@ namespace SMAControlApp.ViewModels
         {
             Channels = new ObservableCollection<ActuatorChannel>();
 
-            for (int i = 1; i <= 5; i++)
+            for (int i = 1; i <= 35; i++)
             {
                 Channels.Add(new ActuatorChannel
                 {
