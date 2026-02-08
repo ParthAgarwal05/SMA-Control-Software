@@ -24,5 +24,11 @@ namespace SMAControlApp.Views
             InitializeComponent();
             DataContext = new ClosedLoopViewModel();
         }
+        private void ApplyAll_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as ClosedLoopViewModel;
+            vm?.ApplyDisplacementToAll();
+        }
+
     }
 }
