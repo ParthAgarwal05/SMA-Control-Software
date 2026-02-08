@@ -1,6 +1,8 @@
 ﻿<UserControl x:Class="SMAControlApp.Views.ClosedLoopView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+             xmlns:viewmodels="clr-namespace:SMAControlApp.ViewModels" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" >
 
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
@@ -67,7 +69,7 @@
                             <ToggleButton Grid.Column="2"
                                       Height="25"
                                       Margin="10,0,0,0"
-                                      IsChecked="{Binding isRunning}">
+                                      IsChecked="{Binding IsRunning}">
                                 <ToggleButton.Style>
                                     <Style TargetType="ToggleButton">
                                         <Setter Property="Foreground" Value="White"/>
@@ -135,24 +137,55 @@
 
                 <TextBox x:Name="GlobalDisplacementBox"
                  Height="25"
+                 Text="{Binding GlobalDisplacement}"
                  Margin="0,0,0,10"/>
 
                 <Button Content="Apply to All"
                 Height="30"
+                Click="ApplyAll_Click"
                 Margin="0,0,0,20"/>
 
                 <Separator Margin="0,10"/>
 
-                <Button Content="Start All"
-                Height="35"
-                Background="#4CAF50"
-                Foreground="White"
-                Margin="0,0,0,10"/>
+                <ToggleButton Height="40"
+              IsChecked="{Binding IsAllRunning, UpdateSourceTrigger=PropertyChanged}">
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="border"
+                                Background="#4CAF50"
+                                CornerRadius="4"
+                                Padding="8">
+                                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                                        </Border>
 
-                <Button Content="Stop All"
-                Height="35"
-                Background="#E74C3C"
-                Foreground="White"/>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="border"
+                                        Property="Background"
+                                        Value="#E74C3C"/>
+                                                <Setter Property="Content"
+                                        Value="Stop All"/>
+                                            </Trigger>
+
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter Property="Content"
+                                        Value="Start All"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
+
             </StackPanel>
         </Border>
     </Grid>
