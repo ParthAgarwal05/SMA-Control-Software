@@ -17,45 +17,9 @@ namespace SMAControlApp.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        //private void Channel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        //{
-        //    if (e.PropertyName == nameof(ActuatorChannel.IsRunning))
-        //    {
-        //        OnPropertyChanged(nameof(IsAllRunning));
-        //    }
-        //}
-        //private void Channels_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        //{
-        //    if (e.NewItems != null)
-        //        foreach (ActuatorChannel c in e.NewItems)
-        //            c.PropertyChanged += Channel_PropertyChanged;
+        public ObservableCollection<ActuatorChannel> Channels => App.Actuators;
+        public Configuration Config => App.Config;
 
-        //    if (e.OldItems != null)
-        //        foreach (ActuatorChannel c in e.OldItems)
-        //            c.PropertyChanged -= Channel_PropertyChanged;
-        //}
-
-        public ObservableCollection<ActuatorChannel> Channels { get; set; }
-
-        public ClosedLoopViewModel()
-        {
-            Channels = new ObservableCollection<ActuatorChannel>();
-
-            for (int i = 1; i <= 5; i++)
-            {
-                Channels.Add(new ActuatorChannel
-                {
-                    ChannelId = i,
-                    DesiredDisplacement = 10,
-                    CurrentDisplacement = 0,
-                    IsRunning = false
-                });
-            }
-            //foreach (var c in Channels)
-            //    c.PropertyChanged += Channel_PropertyChanged;
-            //Channels.CollectionChanged += Channels_CollectionChanged;
-
-        }
         private bool _isAllRunning = false;
         public bool IsAllRunning
         {

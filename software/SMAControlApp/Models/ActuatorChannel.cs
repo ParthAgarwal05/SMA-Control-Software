@@ -7,10 +7,10 @@ namespace SMAControlApp.Models
 {
     public class ActuatorChannel : INotifyPropertyChanged
     {
-        public int _channelId;
-        public double _desiredDisplacement;
-        public double _currentDisplacement;
-        public bool _isRunning;
+        private int _channelId;
+        private double _desiredDisplacement;
+        private double _currentDisplacement;
+        private bool _isRunning;
         public int ChannelId { 
             get => _channelId;
             set {
