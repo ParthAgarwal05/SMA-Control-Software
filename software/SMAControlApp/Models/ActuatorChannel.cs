@@ -11,6 +11,17 @@ namespace SMAControlApp.Models
         private double _desiredDisplacement;
         private double _currentDisplacement;
         private bool _isRunning;
+        private double _requiredVoltage;
+        public double RequiredVoltage
+        {
+            get => _requiredVoltage;
+            set
+            {
+                _requiredVoltage = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int ChannelId { 
             get => _channelId;
             set {
@@ -32,11 +43,18 @@ namespace SMAControlApp.Models
                 OnPropertyChanged();
             }
         }
+        private void ComputeVoltage()
+        {
+            RequiredVoltage = App.Config.CalculateVoltage(DesiredDisplacement);
+        }
+
         public bool IsRunning {
             get => _isRunning;
             set {
                 _isRunning = value;
                 OnPropertyChanged();
+                if (_isRunning)
+                    ComputeVoltage();
             }
         }
 
