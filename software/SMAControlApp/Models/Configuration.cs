@@ -12,6 +12,16 @@ namespace SMAControlApp.Models
         private double _minVoltage;
         private double _maxVoltage;
         private List<double> _equationCoefficients;
+        public double CalculateVoltage(double displacement)
+        {
+            double result = 0;
+            for (int i = 0; i < EquationCoefficients.Count; i++)
+            {
+                result += EquationCoefficients[i] * Math.Pow(displacement, EquationCoefficients.Count - i - 1);
+            }
+            return result;
+        }
+
         public int ActuatorCount
         {
             get => _actuatorCount;

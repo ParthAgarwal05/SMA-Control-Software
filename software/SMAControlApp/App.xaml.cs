@@ -42,6 +42,7 @@ namespace SMAControlApp
 
             Config = new Configuration();
             Config.ActuatorCount = 35;
+            Config.EquationCoefficients = new List<double> {2, 5}; //means v = 2s+5
             Actuators = new ObservableCollection<ActuatorChannel>();
             Config.PropertyChanged += Config_PropertyChanged;
 
