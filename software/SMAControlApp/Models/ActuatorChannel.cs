@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using System.Windows.Threading;
+
 
 namespace SMAControlApp.Models
 {
@@ -12,6 +14,27 @@ namespace SMAControlApp.Models
         private double _currentDisplacement;
         private bool _isRunning;
         private double _requiredVoltage;
+        private DispatcherTimer _timer;
+
+        public ActuatorChannel()
+        {
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromSeconds(1);
+            _timer.Tick += Timer_Tick;
+        }
+
+        private void Timer_Tick(object? sender, EventArgs e)
+        {
+            if (CurrentDisplacement < DesiredDisplacement)
+            {
+                CurrentDisplacement += 1;
+            }
+            else
+            {
+                IsRunning = false;
+                _timer.Stop();
+            }
+        }
         public double RequiredVoltage
         {
             get => _requiredVoltage;
@@ -54,7 +77,11 @@ namespace SMAControlApp.Models
                 _isRunning = value;
                 OnPropertyChanged();
                 if (_isRunning)
+                {
+                    CurrentDisplacement = 0;
                     ComputeVoltage();
+                    _timer.Start();     
+                }
             }
         }
 
