@@ -81,6 +81,9 @@ namespace SMAControlApp.Models
                     CurrentDisplacement = 0;
                     ComputeVoltage();
                     _timer.Start();     
+                } else
+                {
+                    _timer.Stop();
                 }
             }
         }
