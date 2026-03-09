@@ -12,9 +12,15 @@ namespace SMAControlApp.Models
         private int _channelId;
         private double _desiredDisplacement;
         private double _currentDisplacement;
-        private bool _isRunning;
+        private bool _isRunning; 
+        private double _inputVoltage;
         private double _requiredVoltage;
         private DispatcherTimer _timer;
+        public enum ControlMode
+        {
+            OpenLoop,
+            ClosedLoop
+        }
 
         public ActuatorChannel()
         {
@@ -23,16 +29,31 @@ namespace SMAControlApp.Models
             _timer.Tick += Timer_Tick;
         }
 
+        private ControlMode _mode;
+
+        public ControlMode Mode
+        {
+            get => _mode;
+            set
+            {
+                _mode = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void Timer_Tick(object? sender, EventArgs e)
         {
-            if (CurrentDisplacement < DesiredDisplacement)
+            if (Mode == ControlMode.ClosedLoop)
             {
-                CurrentDisplacement += 1;
-            }
-            else
-            {
-                IsRunning = false;
-                _timer.Stop();
+                if (CurrentDisplacement < DesiredDisplacement)
+                {
+                    CurrentDisplacement += 1;
+                }
+                else
+                {
+                    IsRunning = false;
+                    _timer.Stop();
+                }
             }
         }
         public double RequiredVoltage
@@ -85,6 +106,15 @@ namespace SMAControlApp.Models
                 {
                     _timer.Stop();
                 }
+            }
+        }
+        public double InputVoltage
+        {
+            get => _inputVoltage;
+            set
+            {
+                _inputVoltage = value;
+                OnPropertyChanged();
             }
         }
 
