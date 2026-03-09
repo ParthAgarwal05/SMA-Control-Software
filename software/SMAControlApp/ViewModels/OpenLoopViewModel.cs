@@ -1,16 +1,12 @@
 ﻿using SMAControlApp.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Drawing.Text;
-using System.Text;
 using static SMAControlApp.Models.ActuatorChannel;
 
 namespace SMAControlApp.ViewModels
 {
-    public class ClosedLoopViewModel : INotifyPropertyChanged
+    public class OpenLoopViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -18,8 +14,8 @@ namespace SMAControlApp.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
         public ObservableCollection<ActuatorChannel> Channels => App.Actuators;
-        public Configuration Config => App.Config;
 
         private bool _isAllRunning = false;
         public bool IsAllRunning
@@ -28,31 +24,33 @@ namespace SMAControlApp.ViewModels
             set
             {
                 _isAllRunning = value;
+
                 foreach (var c in Channels)
                     c.IsRunning = _isAllRunning;
 
                 OnPropertyChanged();
             }
         }
-        private double _globalDisplacement;
-        public double GlobalDisplacement
+
+        private double _globalVoltage;
+
+        public double GlobalVoltage
         {
-            get => _globalDisplacement;
+            get => _globalVoltage;
             set
             {
-                _globalDisplacement = value;
+                _globalVoltage = value;
                 OnPropertyChanged();
             }
         }
-        public void ApplyDisplacementToAll()
+
+        public void ApplyVoltageToAll()
         {
             foreach (var ch in Channels)
             {
-                ch.Mode = ControlMode.ClosedLoop;
-                ch.DesiredDisplacement = GlobalDisplacement;
+                ch.Mode = ControlMode.OpenLoop;
+                ch.InputVoltage = GlobalVoltage;
             }
         }
-
     }
-
 }
