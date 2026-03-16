@@ -1,9 +1,11 @@
-﻿using SMAControlApp.ViewModels;
+﻿using SMAControlApp.Models;
+using SMAControlApp.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -28,6 +30,25 @@ namespace SMAControlApp.Views
         {
             var vm = DataContext as ClosedLoopViewModel;
             vm?.ApplyDisplacementToAll();
+        }
+
+        private void Toggle_Click(object sender, RoutedEventArgs e)
+        {
+            var toggle = sender as ToggleButton;
+            var actuator = toggle?.DataContext as ActuatorChannel;
+            var vm = DataContext as ClosedLoopViewModel;
+
+            if (actuator == null || vm == null)
+                return;
+
+            if (actuator.IsRunning)
+            {
+                actuator.IsRunning = false;
+            }
+            else
+            {
+                vm.StartChannel(actuator);
+            }
         }
 
     }

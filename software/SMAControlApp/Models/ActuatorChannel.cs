@@ -18,6 +18,7 @@ namespace SMAControlApp.Models
         private DispatcherTimer _timer;
         public enum ControlMode
         {
+            None,
             OpenLoop,
             ClosedLoop
         }
@@ -29,8 +30,23 @@ namespace SMAControlApp.Models
             _timer.Tick += Timer_Tick;
         }
 
-        private ControlMode _mode;
+        private ControlMode _mode = ControlMode.None;
 
+        public bool IsAvailableInClosedLoop
+        {
+            get
+            {
+                return Mode == ControlMode.None || Mode == ControlMode.ClosedLoop;
+            }
+        }
+
+        public bool IsAvailableInOpenLoop
+        {
+            get
+            {
+                return Mode == ControlMode.None || Mode == ControlMode.OpenLoop;
+            }
+        }
         public ControlMode Mode
         {
             get => _mode;
@@ -38,6 +54,8 @@ namespace SMAControlApp.Models
             {
                 _mode = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsAvailableInClosedLoop));
+                OnPropertyChanged(nameof(IsAvailableInOpenLoop));
             }
         }
 
@@ -52,6 +70,7 @@ namespace SMAControlApp.Models
                 else
                 {
                     IsRunning = false;
+                    Mode = ControlMode.None;
                     _timer.Stop();
                 }
             }
@@ -92,20 +111,29 @@ namespace SMAControlApp.Models
             RequiredVoltage = App.Config.CalculateVoltage(DesiredDisplacement);
         }
 
-        public bool IsRunning {
+        public bool IsRunning
+        {
             get => _isRunning;
-            set {
+            set
+            {
+                if (_isRunning == value)
+                    return;
+
                 _isRunning = value;
-                OnPropertyChanged();
+
                 if (_isRunning)
                 {
                     CurrentDisplacement = 0;
                     ComputeVoltage();
-                    _timer.Start();     
-                } else
+                    _timer.Start();
+                }
+                else
                 {
                     _timer.Stop();
+                    Mode = ControlMode.None;
                 }
+
+                OnPropertyChanged();
             }
         }
         public double InputVoltage

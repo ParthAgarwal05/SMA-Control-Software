@@ -76,7 +76,9 @@
                             <ToggleButton Grid.Column="2"
                                       Height="25"
                                       Margin="10,0,0,0"
-                                      IsChecked="{Binding IsRunning}">
+                                      IsChecked="{Binding IsRunning, Mode=OneWay}"
+                                      IsEnabled="{Binding IsAvailableInClosedLoop}"
+                                      Click="Toggle_Click">
                                 <ToggleButton.Style>
                                     <Style TargetType="ToggleButton">
                                         <Setter Property="Foreground" Value="White"/>
@@ -161,6 +163,7 @@
                 <Separator Margin="0,10"/>
 
                 <ToggleButton Height="40"
+              IsEnabled="{Binding GlobalControlsEnabled}"
               IsChecked="{Binding IsAllRunning, UpdateSourceTrigger=PropertyChanged}">
                     <ToggleButton.Style>
                         <Style TargetType="ToggleButton">
