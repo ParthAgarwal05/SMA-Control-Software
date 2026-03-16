@@ -8,6 +8,16 @@ namespace SMAControlApp.ViewModels
 {
     public class OpenLoopViewModel : INotifyPropertyChanged
     {
+        public OpenLoopViewModel()
+        {
+            foreach (var c in Channels)
+                c.PropertyChanged += Channel_PropertyChanged;
+        }
+        private void Channel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ActuatorChannel.IsRunning))
+                OnPropertyChanged(nameof(IsAllRunning));
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string? name = null)
@@ -17,18 +27,52 @@ namespace SMAControlApp.ViewModels
 
         public ObservableCollection<ActuatorChannel> Channels => App.Actuators;
 
-        private bool _isAllRunning = false;
+        //private bool _isAllRunning;
         public bool IsAllRunning
         {
-            get => _isAllRunning;
+            get
+            {
+                foreach (var c in Channels)
+                {
+                    if (!c.IsRunning || c.Mode != ControlMode.OpenLoop)
+                        return false;
+                }
+                return true;
+            }
+
             set
             {
-                _isAllRunning = value;
-
                 foreach (var c in Channels)
-                    c.IsRunning = _isAllRunning;
+                {
+                    if (value)
+                    {
+                        if (c.Mode == ControlMode.None || c.Mode == ControlMode.OpenLoop)
+                        {
+                            c.Mode = ControlMode.OpenLoop;
+                            c.IsRunning = true;
+                        }
+                    }
+                    else
+                    {
+                        if (c.Mode == ControlMode.OpenLoop)
+                            c.IsRunning = false;
+                    }
+                }
 
                 OnPropertyChanged();
+            }
+        }
+
+        public bool GlobalControlsEnabled
+        {
+            get
+            {
+                foreach (var c in Channels)
+                {
+                    if (c.Mode == ControlMode.ClosedLoop)
+                        return false;
+                }
+                return true;
             }
         }
 
@@ -48,9 +92,17 @@ namespace SMAControlApp.ViewModels
         {
             foreach (var ch in Channels)
             {
-                ch.Mode = ControlMode.OpenLoop;
                 ch.InputVoltage = GlobalVoltage;
             }
+        }
+
+        public void StartChannel(ActuatorChannel ch)
+        {
+            if (ch.Mode != ControlMode.None && ch.Mode != ControlMode.OpenLoop)
+                return;
+
+            ch.Mode = ControlMode.OpenLoop;
+            ch.IsRunning = true;
         }
     }
 }

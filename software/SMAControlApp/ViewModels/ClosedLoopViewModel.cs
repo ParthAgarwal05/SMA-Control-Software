@@ -12,6 +12,16 @@ namespace SMAControlApp.ViewModels
 {
     public class ClosedLoopViewModel : INotifyPropertyChanged
     {
+        public ClosedLoopViewModel()
+        {
+            foreach (var c in Channels)
+                c.PropertyChanged += Channel_PropertyChanged;
+        }
+        private void Channel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ActuatorChannel.IsRunning))
+                OnPropertyChanged(nameof(IsAllRunning));
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string? name = null)
@@ -21,15 +31,50 @@ namespace SMAControlApp.ViewModels
         public ObservableCollection<ActuatorChannel> Channels => App.Actuators;
         public Configuration Config => App.Config;
 
-        private bool _isAllRunning = false;
+       // private bool _isAllRunning;
+
+        public bool GlobalControlsEnabled
+        {
+            get
+            {
+                foreach (var c in Channels)
+                {
+                    if (c.Mode == ControlMode.OpenLoop)
+                        return false;
+                }
+                return true;
+            }
+        }
         public bool IsAllRunning
         {
-            get => _isAllRunning;
+            get
+            {
+                foreach (var c in Channels)
+                {
+                    if (!c.IsRunning || c.Mode != ControlMode.ClosedLoop)
+                        return false;
+                }
+                return true;
+            }
+
             set
             {
-                _isAllRunning = value;
                 foreach (var c in Channels)
-                    c.IsRunning = _isAllRunning;
+                {
+                    if (value)
+                    {
+                        if (c.Mode == ControlMode.None || c.Mode == ControlMode.ClosedLoop)
+                        {
+                            c.Mode = ControlMode.ClosedLoop;
+                            c.IsRunning = true;
+                        }
+                    }
+                    else
+                    {
+                        if (c.Mode == ControlMode.ClosedLoop)
+                            c.IsRunning = false;
+                    }
+                }
 
                 OnPropertyChanged();
             }
@@ -46,13 +91,20 @@ namespace SMAControlApp.ViewModels
         }
         public void ApplyDisplacementToAll()
         {
+
             foreach (var ch in Channels)
             {
-                ch.Mode = ControlMode.ClosedLoop;
                 ch.DesiredDisplacement = GlobalDisplacement;
             }
         }
+        public void StartChannel(ActuatorChannel ch)
+        {
+            if (ch.Mode != ControlMode.None && ch.Mode != ControlMode.ClosedLoop)
+                return;
 
+            ch.Mode = ControlMode.ClosedLoop;
+            ch.IsRunning = true;
+        }
     }
 
 }
