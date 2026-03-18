@@ -76,6 +76,7 @@
                             <ToggleButton Grid.Column="2"
                                       Height="25"
                                       Margin="10,0,0,0"
+                                      x:Name="toggle"
                                       IsChecked="{Binding IsRunning, Mode=OneWay}"
                                       IsEnabled="{Binding IsAvailableInClosedLoop}"
                                       Click="Toggle_Click">

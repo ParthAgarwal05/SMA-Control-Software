@@ -38,7 +38,6 @@ namespace SMAControlApp.Views
             if (vm == null) return;
 
             bool start = !vm.IsAllRunning;
-
             string action = start ? "start" : "stop";
 
             var result = MessageBox.Show(
@@ -47,9 +46,40 @@ namespace SMAControlApp.Views
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.Yes)
+            if (result != MessageBoxResult.Yes)
             {
-                vm.IsAllRunning = start;
+                vm.IsAllRunning = false;
+                return;
+            }
+
+            var config = App.Config;
+
+            if (start)
+            {
+                foreach (var actuator in vm.Channels)
+                {
+                    double outputVoltage = config.CalculateVoltage(actuator.DesiredDisplacement) * config.AmplifierGain;
+
+                    if (outputVoltage > config.MaxVoltage || outputVoltage < config.MinVoltage)
+                    {
+                        MessageBox.Show(
+                            $"Cannot start all actuators!\n\n" +
+                            $"Actuator: {actuator.ChannelId}\n" +
+                            $"Voltage: {outputVoltage:F2} V\n" +
+                            $"Allowed: {config.MinVoltage} V to {config.MaxVoltage} V",
+                            "Voltage Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
+                        vm.IsAllRunning = false;
+                        return;
+                    }
+                }
+                vm.IsAllRunning = true;
+            }
+            else
+            {
+                vm.IsAllRunning = false;
             }
         }
 
@@ -57,17 +87,33 @@ namespace SMAControlApp.Views
         {
             var toggle = sender as ToggleButton;
             var actuator = toggle?.DataContext as ActuatorChannel;
+            var config = App.Config;
             var vm = DataContext as ClosedLoopViewModel;
 
             if (actuator == null || vm == null)
                 return;
-
             if (actuator.IsRunning)
             {
                 actuator.IsRunning = false;
             }
             else
             {
+                double outputVoltage = config.CalculateVoltage(actuator.DesiredDisplacement) * config.AmplifierGain;
+
+                if (outputVoltage > config.MaxVoltage || outputVoltage < config.MinVoltage)
+                {
+                    MessageBox.Show(
+                        $"Voltage out of range!\n\n" +
+                        $"Calculated: {outputVoltage:F2} V\n" +
+                        $"Allowed: {config.MinVoltage} V to {config.MaxVoltage} V",
+                        "Voltage Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+                    actuator.IsRunning = false;
+                    return; 
+                }
+
                 vm.StartChannel(actuator);
             }
         }
