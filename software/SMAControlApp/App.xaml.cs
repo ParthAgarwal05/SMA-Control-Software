@@ -1,22 +1,18 @@
 ﻿using SMAControlApp.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data;
 using System.Windows;
 
 namespace SMAControlApp
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
-        public static Configuration Config { get; private set; }
-        public static ObservableCollection<ActuatorChannel> Actuators { get; private set; }
-        private void BuildActuators()
+        public static Configuration Config { get; private set; } = null!;
+        public static ObservableCollection<ActuatorChannel> Actuators { get; private set; } = null!;
+
+        private static void BuildActuators()
         {
             Actuators.Clear();
-
             for (int i = 1; i <= Config.ActuatorCount; i++)
             {
                 Actuators.Add(new ActuatorChannel
@@ -36,19 +32,14 @@ namespace SMAControlApp
                 BuildActuators();
             }
         }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
             Config = new Configuration();
-            Config.ActuatorCount = 35;
-            Config.EquationCoefficients = new List<double> {2, 5}; //means v = 2s+5
             Actuators = new ObservableCollection<ActuatorChannel>();
             Config.PropertyChanged += Config_PropertyChanged;
-
             BuildActuators();
         }
-
     }
-
 }

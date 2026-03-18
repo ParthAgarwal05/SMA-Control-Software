@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SMAControlApp.Models
 {
     public class Configuration : INotifyPropertyChanged
     {
-        private int _actuatorCount;
-        private int _amplifierGain;
-        private double _minVoltage;
-        private double _maxVoltage;
-        private List<double> _equationCoefficients;
+        private int _actuatorCount = 17;
+        private int _amplifierGain = 0;
+        private double _minVoltage = 0;
+        private double _maxVoltage = 0;
+        private List<double> _equationCoefficients = new List<double>();
+
         public double CalculateVoltage(double displacement)
         {
             double result = 0;
@@ -25,48 +26,31 @@ namespace SMAControlApp.Models
         public int ActuatorCount
         {
             get => _actuatorCount;
-            set
-            {
-                _actuatorCount = value;
-                OnPropertyChanged();
-            }
+            set { _actuatorCount = value; OnPropertyChanged(); }
         }
+
         public int AmplifierGain
         {
             get => _amplifierGain;
-            set
-            {
-                _amplifierGain = value;
-                OnPropertyChanged();
-            }
+            set { _amplifierGain = value; OnPropertyChanged(); }
         }
+
         public double MinVoltage
         {
             get => _minVoltage;
-            set
-            {
-                _minVoltage = value;
-                OnPropertyChanged();
-            }
+            set { _minVoltage = value; OnPropertyChanged(); }
         }
+
         public double MaxVoltage
         {
             get => _maxVoltage;
-            set
-            {
-                _maxVoltage = value;
-                OnPropertyChanged();
-            }
+            set { _maxVoltage = value; OnPropertyChanged(); }
         }
 
         public List<double> EquationCoefficients
         {
             get => _equationCoefficients;
-            set {
-                _equationCoefficients = value;
-                OnPropertyChanged();
-            }
-
+            set { _equationCoefficients = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
