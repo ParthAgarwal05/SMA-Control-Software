@@ -1,13 +1,217 @@
 ﻿<UserControl x:Class="SMAControlApp.Views.ConfigurationView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:SMAControlApp.Views">
-    <Grid>
-        <TextBlock Text="Configuration View"
-           FontSize="20"
-           HorizontalAlignment="Center"
-           VerticalAlignment="Center"/>
-    </Grid>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- TITLE -->
+            <TextBlock Grid.Row="0"
+                       Text="System Configuration"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Margin="0,0,0,15"/>
+
+            <!-- SECTION 1 — ACTUATOR CHANNELS & VOLTAGE -->
+            <Border Grid.Row="1"
+                    Background="#E9EEF2"
+                    Padding="15"
+                    Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Actuator Channels"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Number of Actuators"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,5"/>
+                            <TextBox Height="25"
+                                     Foreground="Black"
+                                     Background="White"
+                                     Text="{Binding ActuatorCount, Mode=TwoWay,
+                                            UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="Enter a value between 1 and 32."
+                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Min Voltage (V)"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,5"/>
+                            <TextBox Height="25"
+                                     Foreground="Black"
+                                     Background="White"
+                                     Text="{Binding MinVoltage, Mode=TwoWay,
+                                            UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="Minimum operating voltage."
+                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Max Voltage (V)"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,5"/>
+                            <TextBox Height="25"
+                                     Foreground="Black"
+                                     Background="White"
+                                     Text="{Binding MaxVoltage, Mode=TwoWay,
+                                            UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="Maximum operating voltage."
+                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- SECTION 2 — CALIBRATION EQUATION -->
+            <Border Grid.Row="2"
+                    Background="#E9EEF2"
+                    Padding="15"
+                    Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Calibration Equation"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Degree (n)"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,5"/>
+                            <TextBox x:Name="DegreeBox"
+                                     Height="25"
+                                     Foreground="Black"
+                                     Background="White"
+                                     TextChanged="Degree_TextChanged"/>
+                            <TextBlock Text="Power of the equation (e.g. 1 = linear)."
+                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Coefficients (highest power first)"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,5"/>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl x:Name="CoefficientsPanel">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <TextBlock Text="One box per coefficient. Example: degree 1 → a1·V + a0"
+                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- SECTION 3 — AMPLIFIER GAIN -->
+            <Border Grid.Row="3"
+                    Background="#E9EEF2"
+                    Padding="15"
+                    Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Amplifier Gain"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10"/>
+
+                    <StackPanel Width="200" HorizontalAlignment="Left">
+                        <TextBlock Text="Gain Value"
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,5"/>
+                        <TextBox Height="25"
+                                 Foreground="Black"
+                                 Background="White"
+                                 Text="{Binding AmplifierGain, Mode=TwoWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="Positive numeric value (e.g. 2)."
+                                   FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ACTION BAR -->
+            <StackPanel Grid.Row="4"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+
+                <Button Content="Reset to Defaults"
+                        Height="35"
+                        Width="140"
+                        Margin="0,0,10,0"
+                        Click="Reset_Click"/>
+
+                <Button Content="Save Configuration"
+                        Height="35"
+                        Width="160"
+                        Click="Save_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border"
+                                                Background="#4CAF50"
+                                                CornerRadius="4"
+                                                Padding="5">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border"
+                                                        Property="Background"
+                                                        Value="#43A047"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="border"
+                                                        Property="Opacity"
+                                                        Value="0.85"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+
+        </Grid>
+    </ScrollViewer>
 </UserControl>
