@@ -69,9 +69,11 @@ namespace SMAControlApp.Models
                 }
                 else
                 {
-                    IsRunning = false;
-                    Mode = ControlMode.None;
                     _timer.Stop();
+                    IsRunning = false;
+                    CurrentDisplacement = 0;
+                    RequiredVoltage = 0;
+                    Mode = ControlMode.None;                   
                 }
             }
         }
@@ -117,7 +119,10 @@ namespace SMAControlApp.Models
             set
             {
                 if (_isRunning == value)
+                {
+                    OnPropertyChanged();
                     return;
+                }
 
                 _isRunning = value;
 
@@ -130,6 +135,8 @@ namespace SMAControlApp.Models
                 else
                 {
                     _timer.Stop();
+                    CurrentDisplacement = 0;
+                    RequiredVoltage = 0; 
                     Mode = ControlMode.None;
                 }
 

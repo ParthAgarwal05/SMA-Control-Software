@@ -8,9 +8,9 @@ namespace SMAControlApp.Models
     public class Configuration : INotifyPropertyChanged
     {
         private int _actuatorCount = 17;
-        private int _amplifierGain = 0;
+        private int _amplifierGain = 1;
         private double _minVoltage = 0;
-        private double _maxVoltage = 0;
+        private double _maxVoltage = 120;
         private List<double> _equationCoefficients = new List<double>();
 
         public double CalculateVoltage(double displacement)

@@ -12,6 +12,40 @@ namespace SMAControlApp.Views
         {
             InitializeComponent();
             DataContext = App.Config;
+            Loaded += ConfigurationView_Loaded;
+        }
+
+        private void ConfigurationView_Loaded(object sender, RoutedEventArgs e)
+        {
+            ActuatorCountBox.Text = App.Config.ActuatorCount.ToString();
+
+            int degree = App.Config.EquationCoefficients?.Count > 0
+                ? App.Config.EquationCoefficients.Count - 1
+                : 0;
+
+            if (degree <= 0)
+                return;
+
+            DegreeBox.Text = degree.ToString();
+
+            Degree_TextChanged(null, null);
+
+            int index = 0;
+
+            foreach (var item in CoefficientsPanel.Items)
+            {
+                if (item is StackPanel sp)
+                {
+                    foreach (var child in sp.Children)
+                    {
+                        if (child is TextBox tb && index < App.Config.EquationCoefficients.Count)
+                        {
+                            tb.Text = App.Config.EquationCoefficients[index].ToString();
+                            index++;
+                        }
+                    }
+                }
+            }
         }
 
         private void Degree_TextChanged(object sender, TextChangedEventArgs e)
@@ -100,9 +134,7 @@ namespace SMAControlApp.Views
             App.Config.ActuatorCount = count;
             App.Config.EquationCoefficients = coefficients;
 
-            App.BuildActuators();
-            // Add this temporarily to test
-           
+            App.BuildActuators();           
 
             MessageBox.Show("Configuration saved successfully.", "Success",
                             MessageBoxButton.OK, MessageBoxImage.Information);
@@ -111,9 +143,9 @@ namespace SMAControlApp.Views
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             App.Config.ActuatorCount = 17;
-            App.Config.AmplifierGain = 0;
+            App.Config.AmplifierGain = 1;
             App.Config.MinVoltage = 0;
-            App.Config.MaxVoltage = 0;
+            App.Config.MaxVoltage = 120;
             App.Config.EquationCoefficients = new List<double>();
             ActuatorCountBox.Text = "17";
             DegreeBox.Text = "";
