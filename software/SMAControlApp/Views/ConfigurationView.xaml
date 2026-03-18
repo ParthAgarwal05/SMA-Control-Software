@@ -32,7 +32,6 @@
                                FontSize="16"
                                FontWeight="Bold"
                                Margin="0,0,0,10"/>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -46,7 +45,8 @@
                             <TextBlock Text="Number of Actuators"
                                        FontWeight="Bold"
                                        Margin="0,0,0,5"/>
-                            <TextBox Height="25"
+                            <TextBox x:Name="ActuatorCountBox"
+                                     Height="25"
                                      Foreground="Black"
                                      Background="White"
                                      Text="{Binding ActuatorCount, Mode=TwoWay,
@@ -94,7 +94,6 @@
                                FontSize="16"
                                FontWeight="Bold"
                                Margin="0,0,0,10"/>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="150"/>
@@ -147,7 +146,6 @@
                                FontSize="16"
                                FontWeight="Bold"
                                Margin="0,0,0,10"/>
-
                     <StackPanel Width="200" HorizontalAlignment="Left">
                         <TextBlock Text="Gain Value"
                                    FontWeight="Bold"
@@ -167,13 +165,11 @@
             <StackPanel Grid.Row="4"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
-
                 <Button Content="Reset to Defaults"
                         Height="35"
                         Width="140"
                         Margin="0,0,10,0"
                         Click="Reset_Click"/>
-
                 <Button Content="Save Configuration"
                         Height="35"
                         Width="160"

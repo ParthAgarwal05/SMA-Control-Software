@@ -10,18 +10,30 @@ namespace SMAControlApp
         public static Configuration Config { get; private set; } = null!;
         public static ObservableCollection<ActuatorChannel> Actuators { get; private set; } = null!;
 
-        private static void BuildActuators()
+        public static void BuildActuators()
         {
-            Actuators.Clear();
-            for (int i = 1; i <= Config.ActuatorCount; i++)
+            int newCount = Config.ActuatorCount;
+            int currentCount = Actuators.Count;
+
+            if (newCount > currentCount)
             {
-                Actuators.Add(new ActuatorChannel
+                for (int i = currentCount + 1; i <= newCount; i++)
                 {
-                    ChannelId = i,
-                    DesiredDisplacement = 0,
-                    CurrentDisplacement = 0,
-                    IsRunning = false
-                });
+                    Actuators.Add(new ActuatorChannel
+                    {
+                        ChannelId = i,
+                        DesiredDisplacement = 0,
+                        CurrentDisplacement = 0,
+                        IsRunning = false
+                    });
+                }
+            }
+            else if (newCount < currentCount)
+            {
+                while (Actuators.Count > newCount)
+                {
+                    Actuators.RemoveAt(Actuators.Count - 1);
+                }
             }
         }
 
