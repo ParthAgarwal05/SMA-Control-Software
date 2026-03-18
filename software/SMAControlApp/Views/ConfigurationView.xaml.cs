@@ -55,7 +55,7 @@ namespace SMAControlApp.Views
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            if (App.Config.ActuatorCount < 1 || App.Config.ActuatorCount > 32)
+            if (!int.TryParse(ActuatorCountBox.Text, out int count) || count < 1 || count > 32)
             {
                 MessageBox.Show("Actuator count must be between 1 and 32.",
                                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -97,18 +97,25 @@ namespace SMAControlApp.Views
                 }
             }
 
+            App.Config.ActuatorCount = count;
             App.Config.EquationCoefficients = coefficients;
+
+            App.BuildActuators();
+            // Add this temporarily to test
+           
+
             MessageBox.Show("Configuration saved successfully.", "Success",
                             MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            App.Config.ActuatorCount = 0;
+            App.Config.ActuatorCount = 17;
             App.Config.AmplifierGain = 0;
             App.Config.MinVoltage = 0;
             App.Config.MaxVoltage = 0;
             App.Config.EquationCoefficients = new List<double>();
+            ActuatorCountBox.Text = "17";
             DegreeBox.Text = "";
             CoefficientsPanel.Items.Clear();
         }
