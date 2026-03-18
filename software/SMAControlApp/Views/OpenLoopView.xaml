@@ -160,8 +160,9 @@
                 <Separator Margin="0,10"/>
 
                 <ToggleButton Height="40"
-                              IsEnabled="{Binding GlobalControlsEnabled}"
-                              IsChecked="{Binding IsAllRunning, UpdateSourceTrigger=PropertyChanged}">
+                IsEnabled="{Binding GlobalControlsEnabled}"
+                IsChecked="{Binding IsAllRunning, Mode=OneWay}"
+                Click="StartStopAll_Click">     
 
                     <ToggleButton.Style>
 

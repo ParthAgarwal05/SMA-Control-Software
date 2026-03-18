@@ -20,7 +20,26 @@ namespace SMAControlApp.Views
             var vm = DataContext as OpenLoopViewModel;
             vm?.ApplyVoltageToAll();
         }
+        private void StartStopAll_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as OpenLoopViewModel;
+            if (vm == null) return;
 
+            bool start = !vm.IsAllRunning;
+
+            string action = start ? "start" : "stop";
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to {action} all actuators?",
+                "Confirm",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                vm.IsAllRunning = start;
+            }
+        }
         private void Toggle_Click(object sender, RoutedEventArgs e)
         {
             var toggle = sender as ToggleButton;

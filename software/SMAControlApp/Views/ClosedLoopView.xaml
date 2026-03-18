@@ -164,7 +164,8 @@
 
                 <ToggleButton Height="40"
               IsEnabled="{Binding GlobalControlsEnabled}"
-              IsChecked="{Binding IsAllRunning, UpdateSourceTrigger=PropertyChanged}">
+              IsChecked="{Binding IsAllRunning, Mode=OneWay}"
+              Click="StartStopAll_Click">
                     <ToggleButton.Style>
                         <Style TargetType="ToggleButton">
                             <Setter Property="Foreground" Value="White"/>
