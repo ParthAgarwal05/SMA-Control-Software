@@ -1,27 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 using System.Windows.Threading;
-
 
 namespace SMAControlApp.Models
 {
     public class ActuatorChannel : INotifyPropertyChanged
     {
+        [Key]
+        public int Id { get; set; }
+
+        // Foreign Key
+        public int UserId { get; set; }
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; }
+
         private int _channelId;
         private double _desiredDisplacement;
         private double _currentDisplacement;
-        private bool _isRunning; 
+        private bool _isRunning;
         private double _inputVoltage;
         private double _requiredVoltage;
+
+        [NotMapped]
         private DispatcherTimer _timer;
-        public enum ControlMode
-        {
-            None,
-            OpenLoop,
-            ClosedLoop
-        }
+
+        public enum ControlMode { None, OpenLoop, ClosedLoop }
 
         public ActuatorChannel()
         {
@@ -32,21 +38,12 @@ namespace SMAControlApp.Models
 
         private ControlMode _mode = ControlMode.None;
 
-        public bool IsAvailableInClosedLoop
-        {
-            get
-            {
-                return Mode == ControlMode.None || Mode == ControlMode.ClosedLoop;
-            }
-        }
+        [NotMapped]
+        public bool IsAvailableInClosedLoop => Mode == ControlMode.None || Mode == ControlMode.ClosedLoop;
 
-        public bool IsAvailableInOpenLoop
-        {
-            get
-            {
-                return Mode == ControlMode.None || Mode == ControlMode.OpenLoop;
-            }
-        }
+        [NotMapped]
+        public bool IsAvailableInOpenLoop => Mode == ControlMode.None || Mode == ControlMode.OpenLoop;
+
         public ControlMode Mode
         {
             get => _mode;
@@ -73,44 +70,40 @@ namespace SMAControlApp.Models
                     IsRunning = false;
                     CurrentDisplacement = 0;
                     RequiredVoltage = 0;
-                    Mode = ControlMode.None;                   
+                    Mode = ControlMode.None;
                 }
             }
         }
+
         public double RequiredVoltage
         {
             get => _requiredVoltage;
-            set
-            {
-                _requiredVoltage = value;
-                OnPropertyChanged();
-            }
+            set { _requiredVoltage = value; OnPropertyChanged(); }
         }
 
-        public int ChannelId { 
+        public int ChannelId
+        {
             get => _channelId;
-            set {
-                _channelId = value;
-                OnPropertyChanged();
-            }
+            set { _channelId = value; OnPropertyChanged(); }
         }
-        public double DesiredDisplacement {
+
+        public double DesiredDisplacement
+        {
             get => _desiredDisplacement;
-            set {
-                _desiredDisplacement = value;
-                OnPropertyChanged();
-            }
+            set { _desiredDisplacement = value; OnPropertyChanged(); }
         }
-        public double CurrentDisplacement { 
+
+        public double CurrentDisplacement
+        {
             get => _currentDisplacement;
-            set {
-                _currentDisplacement = value;
-                OnPropertyChanged();
-            }
+            set { _currentDisplacement = value; OnPropertyChanged(); }
         }
+
         private void ComputeVoltage()
         {
-            RequiredVoltage = App.Config.CalculateVoltage(DesiredDisplacement);
+            // Note: In a real app, you'd access the User's config via the Navigation Property
+            if (User?.Config != null)
+                RequiredVoltage = User.Config.CalculateVoltage(DesiredDisplacement);
         }
 
         public bool IsRunning
@@ -118,14 +111,8 @@ namespace SMAControlApp.Models
             get => _isRunning;
             set
             {
-                if (_isRunning == value)
-                {
-                    OnPropertyChanged();
-                    return;
-                }
-
+                if (_isRunning == value) return;
                 _isRunning = value;
-
                 if (_isRunning)
                 {
                     CurrentDisplacement = 0;
@@ -136,26 +123,21 @@ namespace SMAControlApp.Models
                 {
                     _timer.Stop();
                     CurrentDisplacement = 0;
-                    RequiredVoltage = 0; 
+                    RequiredVoltage = 0;
                     Mode = ControlMode.None;
                 }
-
                 OnPropertyChanged();
             }
         }
+
         public double InputVoltage
         {
             get => _inputVoltage;
-            set
-            {
-                _inputVoltage = value;
-                OnPropertyChanged();
-            }
+            set { _inputVoltage = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged(string? name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

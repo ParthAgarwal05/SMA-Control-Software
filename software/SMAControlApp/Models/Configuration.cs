@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 
 namespace SMAControlApp.Models
 {
     public class Configuration : INotifyPropertyChanged
     {
+        [Key]
+        public int Id { get; set; }
+
+        public int UserId { get; set; }
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; }
+
         private int _actuatorCount = 17;
         private int _amplifierGain = 1;
         private double _minVoltage = 0;
@@ -54,8 +63,7 @@ namespace SMAControlApp.Models
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged(string? name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
