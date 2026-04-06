@@ -1,7 +1,7 @@
 ﻿using SMAControlApp.Models;
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using static SMAControlApp.Models.ActuatorChannel;
 
 namespace SMAControlApp.ViewModels
@@ -13,13 +13,17 @@ namespace SMAControlApp.ViewModels
             foreach (var c in Channels)
                 c.PropertyChanged += Channel_PropertyChanged;
         }
+
         private void Channel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ActuatorChannel.IsRunning))
                 OnPropertyChanged(nameof(IsAllRunning));
-        }
-        public event PropertyChangedEventHandler? PropertyChanged;
 
+            if (e.PropertyName == nameof(ActuatorChannel.Mode))
+                OnPropertyChanged(nameof(GlobalControlsEnabled));
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -27,24 +31,14 @@ namespace SMAControlApp.ViewModels
 
         public ObservableCollection<ActuatorChannel> Channels => App.Actuators;
 
-        //private bool _isAllRunning;
         public bool IsAllRunning
         {
-            get
-            {
-                foreach (var c in Channels)
-                {
-                    if (!c.IsRunning || c.Mode != ControlMode.OpenLoop)
-                        return false;
-                }
-                return true;
-            }
-
+            get => Channels.Count > 0 && Channels.All(c => c.IsRunning && c.Mode == ControlMode.OpenLoop);
             set
             {
                 foreach (var c in Channels)
                 {
-                    if (value)
+                    if (value) // Start All
                     {
                         if (c.Mode == ControlMode.None || c.Mode == ControlMode.OpenLoop)
                         {
@@ -52,48 +46,28 @@ namespace SMAControlApp.ViewModels
                             c.IsRunning = true;
                         }
                     }
-                    else
+                    else // Stop All
                     {
-                        if (c.Mode == ControlMode.OpenLoop)
-                            c.IsRunning = false;
+                        c.IsRunning = false;
                     }
                 }
-
                 OnPropertyChanged();
             }
         }
 
-        public bool GlobalControlsEnabled
-        {
-            get
-            {
-                foreach (var c in Channels)
-                {
-                    if (c.Mode == ControlMode.ClosedLoop)
-                        return false;
-                }
-                return true;
-            }
-        }
+        public bool GlobalControlsEnabled => Channels.All(c => c.Mode != ControlMode.ClosedLoop);
 
         private double _globalVoltage;
-
         public double GlobalVoltage
         {
             get => _globalVoltage;
-            set
-            {
-                _globalVoltage = value;
-                OnPropertyChanged();
-            }
+            set { _globalVoltage = value; OnPropertyChanged(); }
         }
 
         public void ApplyVoltageToAll()
         {
             foreach (var ch in Channels)
-            {
                 ch.InputVoltage = GlobalVoltage;
-            }
         }
 
         public void StartChannel(ActuatorChannel ch)
