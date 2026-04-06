@@ -1,8 +1,8 @@
 ﻿using SMAControlApp.Models;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace SMAControlApp.Views
 {
@@ -11,72 +11,73 @@ namespace SMAControlApp.Views
         public ConfigurationView()
         {
             InitializeComponent();
+
+            // DataContext = App.Config so all TextBox bindings work
             DataContext = App.Config;
+
+            // Rebuild coefficient boxes if coefficients already loaded from file
+            if (App.Config.EquationCoefficients.Count > 0)
+            {
+                int degree = App.Config.EquationCoefficients.Count - 1;
+                DegreeBox.Text = degree.ToString();
+                BuildCoefficientBoxes(degree, App.Config.EquationCoefficients);
+            }
         }
 
+        // Called when user changes the degree number
         private void Degree_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (CoefficientsPanel == null) return;
-            CoefficientsPanel.Items.Clear();
-
-            if (!int.TryParse(DegreeBox.Text, out int n) || n < 1 || n > 10)
-                return;
-
-            for (int i = n; i >= 0; i--)
+            if (!int.TryParse(DegreeBox.Text, out int degree) || degree < 1 || degree > 10)
             {
-                string label = i == 0 ? "a₀ (const)" : $"a{i} · V^{i}";
+                CoefficientsPanel.Items.Clear();
+                return;
+            }
+            BuildCoefficientBoxes(degree, null);
+        }
 
-                var stack = new StackPanel
+        // Builds (degree + 1) input boxes labeled a_n ... a_0
+        private void BuildCoefficientBoxes(int degree, List<double>? existing)
+        {
+            CoefficientsPanel.Items.Clear();
+            int count = degree + 1;
+
+            for (int i = 0; i < count; i++)
+            {
+                var panel = new StackPanel
                 {
-                    Margin = new Thickness(0, 0, 10, 0),
-                    Width = 90
+                    Orientation = Orientation.Vertical,
+                    Margin = new Thickness(0, 0, 8, 0)
                 };
 
-                stack.Children.Add(new TextBlock
+                // Label: a3, a2, a1, a0
+                panel.Children.Add(new TextBlock
                 {
-                    Text = label,
-                    FontSize = 10,
-                    Foreground = Brushes.Gray,
-                    Margin = new Thickness(0, 0, 0, 3),
-                    TextWrapping = TextWrapping.Wrap
+                    Text = $"a{degree - i}",
+                    FontSize = 11,
+                    Foreground = System.Windows.Media.Brushes.Gray,
+                    HorizontalAlignment = HorizontalAlignment.Center
                 });
 
-                stack.Children.Add(new TextBox
+                // Input box
+                var box = new TextBox
                 {
-                    Height = 25,
-                    Foreground = Brushes.Black,
-                    Background = Brushes.White,
-                    Tag = i
-                });
-
-                CoefficientsPanel.Items.Add(stack);
+                    Width = 70,
+                    Height = 28,
+                    Background = System.Windows.Media.Brushes.White,
+                    Foreground = System.Windows.Media.Brushes.Black,
+                    Text = (existing != null && i < existing.Count)
+                           ? existing[i].ToString()
+                           : "0"
+                };
+                panel.Children.Add(box);
+                CoefficientsPanel.Items.Add(panel);
             }
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
+        // Reads all coefficient boxes → List<double>
+        private List<double>? ReadCoefficients()
         {
-            if (!int.TryParse(ActuatorCountBox.Text, out int count) || count < 1 || count > 32)
-            {
-                MessageBox.Show("Actuator count must be between 1 and 32.",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (App.Config.AmplifierGain <= 0)
-            {
-                MessageBox.Show("Amplifier gain must be a positive number.",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (CoefficientsPanel.Items.Count == 0)
-            {
-                MessageBox.Show("Please enter the equation degree and coefficients.",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            var coefficients = new List<double>();
+            var result = new List<double>();
             foreach (var item in CoefficientsPanel.Items)
             {
                 if (item is StackPanel sp)
@@ -87,37 +88,73 @@ namespace SMAControlApp.Views
                         {
                             if (!double.TryParse(tb.Text, out double val))
                             {
-                                MessageBox.Show($"Invalid coefficient: '{tb.Text}'",
-                                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                return;
+                                MessageBox.Show(
+                                    $"Invalid coefficient value: '{tb.Text}'.\nPlease enter numeric values.",
+                                    "Validation Error",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning);
+                                return null;
                             }
-                            coefficients.Add(val);
+                            result.Add(val);
                         }
                     }
                 }
             }
-
-            App.Config.ActuatorCount = count;
-            App.Config.EquationCoefficients = coefficients;
-
-            App.BuildActuators();
-            // Add this temporarily to test
-           
-
-            MessageBox.Show("Configuration saved successfully.", "Success",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+            return result;
         }
 
+        // Save button
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            
+            var coefficients = ReadCoefficients();
+            if (coefficients == null) return;
+
+            App.Config.EquationCoefficients = coefficients;
+
+            try
+            {
+                string path = System.IO.Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory, "config.json");
+
+                
+
+                ConfigurationService.Save(App.Config);
+
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"ERROR:\n{ex.Message}\n\n{ex.StackTrace}", "Save Failed");
+            }
+
+            App.BuildActuators();
+            MessageBox.Show("Configuration saved successfully.", "Saved",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // Reset button — restores defaults and clears the JSON file
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            App.Config.ActuatorCount = 17;
-            App.Config.AmplifierGain = 0;
+            var confirm = MessageBox.Show(
+                "Reset all settings to defaults?",
+                "Reset Configuration",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            App.Config.ActuatorCount = 1;
             App.Config.MinVoltage = 0;
             App.Config.MaxVoltage = 0;
+            App.Config.AmplifierGain = 0;
             App.Config.EquationCoefficients = new List<double>();
-            ActuatorCountBox.Text = "17";
-            DegreeBox.Text = "";
+
+            DegreeBox.Text = string.Empty;
             CoefficientsPanel.Items.Clear();
+
+            ConfigurationService.Save(App.Config);
+            App.BuildActuators();
         }
     }
 }

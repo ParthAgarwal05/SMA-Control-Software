@@ -108,7 +108,8 @@ namespace SMAControlApp.Models
         }
         private void ComputeVoltage()
         {
-            RequiredVoltage = App.Config.CalculateVoltage(DesiredDisplacement);
+            double raw = App.Config.CalculateVoltage(DesiredDisplacement);
+            RequiredVoltage = Math.Clamp(raw, App.Config.MinVoltage, App.Config.MaxVoltage);
         }
 
         public bool IsRunning
