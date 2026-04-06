@@ -1,26 +1,15 @@
-﻿using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using SMAControlApp.Views;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SMAControlApp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
         }
+
         private void OpenLoop_Click(object sender, RoutedEventArgs e)
         {
             MainContent.Content = new OpenLoopView();
@@ -30,9 +19,14 @@ namespace SMAControlApp
         {
             MainContent.Content = new ClosedLoopView();
         }
+
         private void Graph_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = new GraphView();
+            var view = new GraphView();
+            // Use the singleton – never new GraphViewModel() here
+            // A fresh instance would miss all events that already fired
+            view.DataContext = App.GraphVM;
+            MainContent.Content = view;
         }
 
         private void Config_Click(object sender, RoutedEventArgs e)

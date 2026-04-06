@@ -6,62 +6,109 @@
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*" />
-            <ColumnDefinition Width="1*" />
-        </Grid.ColumnDefinitions>
+        <!-- ══════════ STATUS BAR ══════════ -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="10,6">
+            <DockPanel>
 
-        <!-- GRAPH AREA -->
-        <ScrollViewer Grid.Column="0"
-                  HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Disabled">
+                <!-- Status text -->
+                <TextBlock Text="{Binding StatusText}"
+                           Foreground="White" FontSize="13"
+                           VerticalAlignment="Center"
+                           DockPanel.Dock="Left"/>
 
-            <Border Width="1200">
+                <!-- Reset button (always visible) -->
+                <Button Content="Reset"
+                        Click="ResetButton_Click"
+                        DockPanel.Dock="Right"
+                        Padding="14,4" Margin="6,0,0,0"
+                        Cursor="Hand"
+                        Background="#E74C3C" Foreground="White"
+                        BorderThickness="0"/>
 
-                <lvc:CartesianChart
-                Series="{Binding Series}" />
+                <!-- Save button (only when all actuators idle) -->
+                <Button Content="Save as CSV"
+                        Click="SaveButton_Click"
+                        DockPanel.Dock="Right"
+                        Padding="14,4"
+                        Cursor="Hand"
+                        Background="#27AE60" Foreground="White"
+                        BorderThickness="0"
+                        Visibility="{Binding ShowSaveButton,
+                                     Converter={StaticResource BoolToVis}}"/>
+            </DockPanel>
+        </Border>
 
-            </Border>
+        <!-- ══════════ MAIN ROW ══════════ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
 
-        </ScrollViewer>
+            <!-- ══ GRAPH AREA ══ -->
+            <ScrollViewer Grid.Column="0"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+                <Border Width="1200">
+                    <lvc:CartesianChart Series="{Binding Series}"
+                                       LegendLocation="None">
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Title="Time (s)">
+                                <lvc:Axis.Separator>
+                                    <lvc:Separator Step="1"/>
+                                </lvc:Axis.Separator>
+                            </lvc:Axis>
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis Title="Displacement" MinValue="0"/>
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+                </Border>
+            </ScrollViewer>
 
+            <!-- ══ SENSOR SELECTION PANEL ══ -->
+            <ScrollViewer Grid.Column="1"
+                          Margin="10"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Text="Sensors"
+                               FontSize="18" FontWeight="Bold"
+                               Margin="0,0,0,10"/>
 
-        <!-- SENSOR SELECTION PANEL -->
-        <ScrollViewer Grid.Column="1"
-              Margin="10"
-              VerticalScrollBarVisibility="Auto"
-              HorizontalScrollBarVisibility="Disabled">
-
-            <StackPanel>
-
-                <TextBlock Text="Sensors"
-                   FontSize="18"
-                   FontWeight="Bold"
-                   Margin="0,0,0,10"/>
-
-                <ItemsControl ItemsSource="{Binding SensorSelectors}">
-
-                    <ItemsControl.ItemTemplate>
-
-                        <DataTemplate>
-
-                            <CheckBox
-                        Content="{Binding Name}"
-                        IsChecked="{Binding IsSelected}"
-                        Margin="5"/>
-
-                        </DataTemplate>
-
-                    </ItemsControl.ItemTemplate>
-
-                </ItemsControl>
-
-            </StackPanel>
-
-        </ScrollViewer>
-
+                    <ItemsControl ItemsSource="{Binding SensorSelectors}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="5,3">
+                                    <!-- Color swatch -->
+                                    <Border Width="14" Height="14"
+                                            Background="{Binding Brush}"
+                                            CornerRadius="2"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Cursor="Hand"
+                                            Tag="{Binding}"
+                                            MouseLeftButtonUp="ColorSwatch_Click"/>
+                                    <!-- Checkbox -->
+                                    <CheckBox Content="{Binding Name}"
+                                              IsChecked="{Binding IsSelected}"
+                                              VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
-
 </UserControl>
