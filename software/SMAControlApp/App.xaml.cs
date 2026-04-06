@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SMAControlApp.Data;
 using SMAControlApp.Models;
+using SMAControlApp.Views;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -46,6 +47,12 @@ namespace SMAControlApp
 
             // 4. Hook up the event listener for live changes
             Config.PropertyChanged += Config_PropertyChanged;
+            MainWindow mainWindow = new MainWindow();
+
+            // Set the login view into its container
+            mainWindow.LoginArea.Content = new LoginView();
+
+            mainWindow.Show();
         }
 
         private User CreateDummyUser(AppDbContext db)
