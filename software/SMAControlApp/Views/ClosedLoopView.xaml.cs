@@ -35,41 +35,70 @@ namespace SMAControlApp.Views
         private void StartStopAll_Click(object sender, RoutedEventArgs e)
         {
             var vm = DataContext as ClosedLoopViewModel;
-            if (vm == null) return;
+            var toggle = sender as ToggleButton;
+            if (vm == null || toggle == null) return;
 
-            bool start = !vm.IsAllRunning;
+            // IMPORTANT: Since it's OneWay, 'vm.IsAllRunning' is still the OLD state.
+            // We want to flip it, so we check the inverse.
+            bool intendedState = !vm.IsAllRunning;
 
-            string action = start ? "start" : "stop";
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to {action} all actuators?",
-                "Confirm",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
+            if (intendedState) // User wants to START
             {
-                vm.IsAllRunning = start;
+                // 1. Safety Check First
+                var config = App.Config;
+                foreach (var actuator in vm.Channels)
+                {
+                    double outputVoltage = config.CalculateVoltage(actuator.DesiredDisplacement) * config.AmplifierGain;
+                    if (outputVoltage > config.MaxVoltage || outputVoltage < config.MinVoltage)
+                    {
+                        MessageBox.Show($"Voltage Error on Channel {actuator.ChannelId}. Aborting.", "Safety Error");
+                        toggle.IsChecked = false; // Force the UI button back to Green
+                        return;
+                    }
+                }
+
+                // 2. Confirmation Second
+                var result = MessageBox.Show("Start all actuators?", "Confirm", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    vm.IsAllRunning = true; // This triggers the loop in your ViewModel
+                }
+                else
+                {
+                    toggle.IsChecked = false; // Force UI button back to Green
+                }
+            }
+            else // User wants to STOP
+            {
+                vm.IsAllRunning = false;
+                // The UI will update to Green automatically because vm.IsAllRunning changed
             }
         }
 
         private void Toggle_Click(object sender, RoutedEventArgs e)
         {
-            var toggle = sender as ToggleButton;
-            var actuator = toggle?.DataContext as ActuatorChannel;
+            var actuator = (sender as ToggleButton)?.DataContext as ActuatorChannel;
             var vm = DataContext as ClosedLoopViewModel;
+            if (actuator == null || vm == null) return;
 
-            if (actuator == null || vm == null)
-                return;
+            // Because of TwoWay binding, 'actuator.IsRunning' is already 
+            // set to the new state before this code runs.
 
-            if (actuator.IsRunning)
+            if (actuator.IsRunning) // User just clicked "Start"
             {
-                actuator.IsRunning = false;
-            }
-            else
-            {
+                // 1. Validate Voltage
+                double v = App.Config.CalculateVoltage(actuator.DesiredDisplacement) * App.Config.AmplifierGain;
+                if (v > App.Config.MaxVoltage || v < App.Config.MinVoltage)
+                {
+                    MessageBox.Show("Voltage Error!");
+                    actuator.IsRunning = false; // UI turns Green automatically
+                    return;
+                }
+
+                // 2. Set Mode
                 vm.StartChannel(actuator);
             }
+            // If actuator.IsRunning is false, the binding already handled it!
         }
 
     }

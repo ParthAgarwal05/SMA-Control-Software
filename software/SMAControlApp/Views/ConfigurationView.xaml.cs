@@ -1,6 +1,8 @@
 ﻿using SMAControlApp.Models;
-using System;
+using SMAControlApp.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -11,20 +13,26 @@ namespace SMAControlApp.Views
         public ConfigurationView()
         {
             InitializeComponent();
-
-            // DataContext = App.Config so all TextBox bindings work
             DataContext = App.Config;
-
-            // Rebuild coefficient boxes if coefficients already loaded from file
-            if (App.Config.EquationCoefficients.Count > 0)
-            {
-                int degree = App.Config.EquationCoefficients.Count - 1;
-                DegreeBox.Text = degree.ToString();
-                BuildCoefficientBoxes(degree, App.Config.EquationCoefficients);
-            }
+            Loaded += ConfigurationView_Loaded;
         }
 
-        // Called when user changes the degree number
+        private void ConfigurationView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (App.Config == null) return;
+
+            ActuatorCountBox.Text = App.Config.ActuatorCount.ToString();
+
+            int degree = App.Config.EquationCoefficients?.Count > 0
+                ? App.Config.EquationCoefficients.Count - 1
+                : 0;
+
+            if (degree <= 0) return;
+
+            DegreeBox.Text = degree.ToString();
+            BuildCoefficientBoxes(degree, App.Config.EquationCoefficients);
+        }
+
         private void Degree_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!int.TryParse(DegreeBox.Text, out int degree) || degree < 1 || degree > 10)
@@ -35,7 +43,6 @@ namespace SMAControlApp.Views
             BuildCoefficientBoxes(degree, null);
         }
 
-        // Builds (degree + 1) input boxes labeled a_n ... a_0
         private void BuildCoefficientBoxes(int degree, List<double>? existing)
         {
             CoefficientsPanel.Items.Clear();
@@ -49,7 +56,6 @@ namespace SMAControlApp.Views
                     Margin = new Thickness(0, 0, 8, 0)
                 };
 
-                // Label: a3, a2, a1, a0
                 panel.Children.Add(new TextBlock
                 {
                     Text = $"a{degree - i}",
@@ -58,7 +64,6 @@ namespace SMAControlApp.Views
                     HorizontalAlignment = HorizontalAlignment.Center
                 });
 
-                // Input box
                 var box = new TextBox
                 {
                     Width = 70,
@@ -74,66 +79,74 @@ namespace SMAControlApp.Views
             }
         }
 
-        // Reads all coefficient boxes → List<double>
         private List<double>? ReadCoefficients()
         {
-            var result = new List<double>();
+            // Validate actuator count
+            if (!int.TryParse(ActuatorCountBox.Text, out int count) || count < 1 || count > 32)
+            {
+                MessageBox.Show("Actuator count must be between 1 and 32.",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;  // FIX: was 'return;'
+            }
+
+            var coefficients = new List<double>();  // FIX: was 'result'
             foreach (var item in CoefficientsPanel.Items)
             {
                 if (item is StackPanel sp)
                 {
-                    foreach (var child in sp.Children)
+                    var tb = sp.Children.OfType<TextBox>().FirstOrDefault();
+                    if (tb != null)
                     {
-                        if (child is TextBox tb)
+                        if (!double.TryParse(tb.Text, out double val))
                         {
-                            if (!double.TryParse(tb.Text, out double val))
-                            {
-                                MessageBox.Show(
-                                    $"Invalid coefficient value: '{tb.Text}'.\nPlease enter numeric values.",
-                                    "Validation Error",
-                                    MessageBoxButton.OK,
-                                    MessageBoxImage.Warning);
-                                return null;
-                            }
-                            result.Add(val);
+                            MessageBox.Show(
+                                $"Invalid coefficient value: '{tb.Text}'.\nPlease enter numeric values.",
+                                "Validation Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                            return null;
                         }
+                        coefficients.Add(val);  // FIX: was 'result.Add'
                     }
                 }
             }
-            return result;
+            return coefficients;
         }
 
-        // Save button
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            
             var coefficients = ReadCoefficients();
             if (coefficients == null) return;
 
             App.Config.EquationCoefficients = coefficients;
 
-            try
+            using (var db = new AppDbContext())
             {
-                string path = System.IO.Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory, "config.json");
+                var existingConfig = db.Configs.FirstOrDefault(c => c.Id == App.Config.Id);
 
-                
+                if (existingConfig != null)
+                {
+                    db.Entry(existingConfig).CurrentValues.SetValues(App.Config);
+                    existingConfig.EquationCoefficients = coefficients;
+                }
+                else
+                {
+                    db.Configs.Update(App.Config);
+                }
 
-                ConfigurationService.Save(App.Config);
+                int changes = db.SaveChanges();
 
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"ERROR:\n{ex.Message}\n\n{ex.StackTrace}", "Save Failed");
+                if (changes > 0)
+                    MessageBox.Show("Saved successfully!", "Saved",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show("No changes detected.", "Saved",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             App.BuildActuators();
-            MessageBox.Show("Configuration saved successfully.", "Saved",
-                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // Reset button — restores defaults and clears the JSON file
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             var confirm = MessageBox.Show(
@@ -146,14 +159,20 @@ namespace SMAControlApp.Views
 
             App.Config.ActuatorCount = 1;
             App.Config.MinVoltage = 0;
-            App.Config.MaxVoltage = 0;
+            App.Config.MaxVoltage = 120;
             App.Config.AmplifierGain = 0;
             App.Config.EquationCoefficients = new List<double>();
 
+            ActuatorCountBox.Text = "1";
             DegreeBox.Text = string.Empty;
             CoefficientsPanel.Items.Clear();
 
-            ConfigurationService.Save(App.Config);
+            using (var db = new AppDbContext())
+            {
+                db.Configs.Update(App.Config);
+                db.SaveChanges();
+            }
+
             App.BuildActuators();
         }
     }

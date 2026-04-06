@@ -71,7 +71,7 @@
                                           Height="25"
                                           Margin="10,0,10,0"
                                           IsEnabled="{Binding IsAvailableInOpenLoop}"
-                                          IsChecked="{Binding IsRunning, Mode=OneWay}"
+                                          IsChecked="{Binding IsRunning, Mode=TwoWay}"
                                           Click="Toggle_Click">
 
                                 <ToggleButton.Style>
