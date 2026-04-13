@@ -104,35 +104,42 @@ namespace SMAControlApp.Views
                 }
             }
 
-            // 2. Update the Global Object
-            // Note: Changing ActuatorCount here triggers the PropertyChanged event in App.xaml.cs
-            // which automatically runs SyncActuatorsWithDatabase().
+            // 2. Update the global object first, then sync actuators
             App.Config.ActuatorCount = count;
             App.Config.EquationCoefficients = coefficients;
+            App.SyncActuatorsWithDatabase(); // SyncActuatorsWithDatabase already saves ActuatorCount to DB
 
-            // 3. Persist to SQLite
+            // 3. Persist remaining config fields to SQLite
             using (var db = new AppDbContext())
             {
-                // Check if the record actually exists in DB first
                 var existingConfig = db.Configs.FirstOrDefault(c => c.Id == App.Config.Id);
 
                 if (existingConfig != null)
                 {
-                    // Update the existing tracked record
-                    db.Entry(existingConfig).CurrentValues.SetValues(App.Config);
-                    existingConfig.EquationCoefficients = coefficients; // Manually assign the list
+                    // Copy scalar fields individually to avoid EF tracking conflicts
+                    existingConfig.ActuatorCount = App.Config.ActuatorCount;
+                    existingConfig.AmplifierGain = App.Config.AmplifierGain;
+                    existingConfig.MinVoltage = App.Config.MinVoltage;
+                    existingConfig.MaxVoltage = App.Config.MaxVoltage;
+                    existingConfig.EquationCoefficients = coefficients;
                 }
                 else
                 {
-                    db.Configs.Update(App.Config);
+                    // Safe insert path: create a detached copy, never attach App.Config directly
+                    var newConfig = new Configuration
+                    {
+                        UserId = App.Config.UserId,
+                        ActuatorCount = App.Config.ActuatorCount,
+                        AmplifierGain = App.Config.AmplifierGain,
+                        MinVoltage = App.Config.MinVoltage,
+                        MaxVoltage = App.Config.MaxVoltage,
+                        EquationCoefficients = new List<double>(coefficients)
+                    };
+                    db.Configs.Add(newConfig);
                 }
 
-                int changes = db.SaveChanges();
-
-                if (changes > 0)
-                    MessageBox.Show("Saved successfully to SQLite!");
-                else
-                    MessageBox.Show("No changes were detected by the database.");
+                db.SaveChanges();
+                MessageBox.Show("Saved successfully!");
             }
         }
 
@@ -141,23 +148,51 @@ namespace SMAControlApp.Views
             var result = MessageBox.Show("Reset all settings to default?", "Confirm", MessageBoxButton.YesNo);
             if (result != MessageBoxResult.Yes) return;
 
-            // Update RAM
+            // 1. UPDATE RAM FIRST
             App.Config.ActuatorCount = 17;
             App.Config.AmplifierGain = 1;
             App.Config.MinVoltage = 0;
             App.Config.MaxVoltage = 120;
             App.Config.EquationCoefficients = new List<double>();
 
-            // Sync UI
+            // 2. SYNC ACTUATORS (reads ActuatorCount from RAM, updates DB channels)
+            App.SyncActuatorsWithDatabase();
+
+            // 3. Update UI
             ActuatorCountBox.Text = "17";
             DegreeBox.Text = "";
             CoefficientsPanel.Items.Clear();
 
-            // Persist Reset to DB
+            // 4. PERSIST remaining config fields to DB
             using (var db = new AppDbContext())
             {
-                db.Configs.Update(App.Config);
+                var existingConfig = db.Configs.FirstOrDefault(c => c.Id == App.Config.Id);
+
+                if (existingConfig != null)
+                {
+                    // Copy scalar fields individually to avoid EF tracking conflicts
+                    existingConfig.ActuatorCount = 17;
+                    existingConfig.AmplifierGain = 1;
+                    existingConfig.MinVoltage = 0;
+                    existingConfig.MaxVoltage = 120;
+                    existingConfig.EquationCoefficients = new List<double>();
+                }
+                else
+                {
+                    var newConfig = new Configuration
+                    {
+                        UserId = App.Config.UserId,
+                        ActuatorCount = 17,
+                        AmplifierGain = 1,
+                        MinVoltage = 0,
+                        MaxVoltage = 120,
+                        EquationCoefficients = new List<double>()
+                    };
+                    db.Configs.Add(newConfig);
+                }
+
                 db.SaveChanges();
+                MessageBox.Show("Reset and saved successfully!");
             }
         }
     }

@@ -38,14 +38,26 @@ namespace SMAControlApp.Views
                     double outputVoltage = actuator.InputVoltage * config.AmplifierGain;
                     if (outputVoltage > config.MaxVoltage || outputVoltage < config.MinVoltage)
                     {
-                        MessageBox.Show($"Voltage Error on Channel {actuator.ChannelId}!", "Safety Abort");
+                        MessageBox.Show(
+                            $"Cannot start all actuators!\n\n" +
+                            $"Actuator: {actuator.ChannelId}\n" +
+                            $"Voltage: {outputVoltage:F2} V\n" +
+                            $"Allowed: {config.MinVoltage} V to {config.MaxVoltage} V",
+                            "Voltage Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
                         toggle.IsChecked = false; // Force UI back to Green
                         return;
                     }
                 }
 
                 // 2. Confirmation
-                var result = MessageBox.Show("Start all actuators in Open Loop?", "Confirm", MessageBoxButton.YesNo);
+                var result = MessageBox.Show(
+                $"Are you sure you want to start all actuators?",
+                "Confirm",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
                 if (result == MessageBoxResult.Yes)
                     vm.IsAllRunning = true;
                 else
@@ -67,10 +79,17 @@ namespace SMAControlApp.Views
             if (actuator.IsRunning)
             {
                 double outputVoltage = actuator.InputVoltage * App.Config.AmplifierGain;
-
+                var config = App.Config;
                 if (outputVoltage > App.Config.MaxVoltage || outputVoltage < App.Config.MinVoltage)
                 {
-                    MessageBox.Show("Voltage out of range!", "Error");
+                    MessageBox.Show(
+                        $"Voltage out of range!\n\n" +
+                        $"Calculated: {outputVoltage:F2} V\n" +
+                        $"Allowed: {config.MinVoltage} V to {config.MaxVoltage} V",
+                        "Voltage Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
                     actuator.IsRunning = false; // UI flips back automatically
                     return;
                 }

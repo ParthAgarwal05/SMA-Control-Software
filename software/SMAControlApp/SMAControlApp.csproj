@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Utils\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="7.0.20" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="7.0.20" />
