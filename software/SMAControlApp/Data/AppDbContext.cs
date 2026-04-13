@@ -28,16 +28,20 @@ namespace SMAControlApp.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Define the comparer for List<double>
-                var doubleListComparer = new ValueComparer<List<double>>(
-            (c1, c2) => c1.SequenceEqual(c2),
-            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-            c => c.ToList());
+            var doubleListComparer = new ValueComparer<List<double>>(
+                (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c == null ? new List<double>() : c.ToList());
+
+            var jsonOptions = new JsonSerializerOptions();
 
             modelBuilder.Entity<Configuration>()
                 .Property(e => e.EquationCoefficients)
                 .HasConversion(
-                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null), // Store as ["0.5","1.2"]
-                    v => JsonSerializer.Deserialize<List<double>>(v, (JsonSerializerOptions)null) ?? new List<double>())
+                    v => JsonSerializer.Serialize(v ?? new List<double>(), jsonOptions),
+                    v => string.IsNullOrWhiteSpace(v)
+                        ? new List<double>()
+                        : JsonSerializer.Deserialize<List<double>>(v, jsonOptions) ?? new List<double>())
                 .Metadata.SetValueComparer(doubleListComparer);
         }
     }

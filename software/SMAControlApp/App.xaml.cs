@@ -1,58 +1,79 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SMAControlApp.Data;
 using SMAControlApp.Models;
+using SMAControlApp.ViewModels;
 using SMAControlApp.Views;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace SMAControlApp
 {
     public partial class App : Application
     {
-        // Globals for the UI to bind to
         public static User CurrentUser { get; private set; } = null!;
         public static Configuration Config { get; private set; } = null!;
         public static ObservableCollection<ActuatorChannel> Actuators { get; private set; } = null!;
 
+        public static GraphViewModel GraphVM { get; private set; } = null!;
+
         protected override void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
-
-            using (var db = new AppDbContext())
+            // Catch ALL unhandled exceptions on UI thread
+            DispatcherUnhandledException += (s, ex) =>
             {
-                // 1. Ensure DB exists and is ready
-                db.Database.EnsureCreated();
+                MessageBox.Show(
+                    $"UI Error:\n{ex.Exception.Message}\n\n" +
+                    $"{ex.Exception.InnerException?.Message}\n\n" +
+                    $"{ex.Exception.StackTrace}",
+                    "Unhandled UI Exception");
+                ex.Handled = true;
+            };
 
-                // 2. Load or Create the Dummy User (Engineer_One)
-                var user = db.Users
-                             .Include(u => u.Config)
-                             .Include(u => u.Actuators)
-                             .FirstOrDefault(u => u.UserName == "User1");
+            // Catch unhandled exceptions on background threads
+            AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
+            {
+                var exception = ex.ExceptionObject as Exception;
+                MessageBox.Show(
+                    $"Fatal Error:\n{exception?.Message}\n\n{exception?.StackTrace}",
+                    "Unhandled Exception");
+            };
 
-                if (user == null)
+            try
+            {
+                base.OnStartup(e);
+
+                using (var db = new AppDbContext())
                 {
-                    user = CreateDummyUser(db);
+                    db.Database.Migrate();
+
+                    var user = db.Users
+                                 .Include(u => u.Config)
+                                 .Include(u => u.Actuators)
+                                 .FirstOrDefault(u => u.UserName == "User1");
+
+                    if (user == null) user = CreateDummyUser(db);
+
+                    CurrentUser = user;
+                    Config = user.Config;
+                    Actuators = new ObservableCollection<ActuatorChannel>(user.Actuators.OrderBy(a => a.ChannelId));
                 }
 
-                // 3. Set global references
-                CurrentUser = user;
-                Config = user.Config;
-
-                // Convert the DB list to an ObservableCollection for WPF UI binding
-                Actuators = new ObservableCollection<ActuatorChannel>(user.Actuators.OrderBy(a => a.ChannelId));
+                MainWindow mainWindow = new MainWindow();
+                GraphVM = new GraphViewModel();
+                mainWindow.LoginArea.Content = new LoginView();
+                mainWindow.Show();
             }
-
-            // 4. Hook up the event listener for live changes
-            Config.PropertyChanged += Config_PropertyChanged;
-            MainWindow mainWindow = new MainWindow();
-
-            // Set the login view into its container
-            mainWindow.LoginArea.Content = new LoginView();
-
-            mainWindow.Show();
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Startup Error: {ex.Message}\n\n{ex.InnerException?.Message}\n\n{ex.StackTrace}",
+                    "Startup Error");
+                Shutdown();
+            }
         }
 
         private User CreateDummyUser(AppDbContext db)
@@ -70,51 +91,44 @@ namespace SMAControlApp
             return newUser;
         }
 
-        private void Config_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(Configuration.ActuatorCount))
-            {
-                SyncActuatorsWithDatabase();
-            }
-        }
-
         public static void SyncActuatorsWithDatabase()
         {
             int targetCount = Config.ActuatorCount;
 
             using (var db = new AppDbContext())
             {
-                // Re-fetch user to track changes in this context
-                var user = db.Users.Include(u => u.Actuators).First(u => u.UserId == CurrentUser.UserId);
-
-                // Update the Config count in DB
                 var dbConfig = db.Configs.First(c => c.UserId == CurrentUser.UserId);
                 dbConfig.ActuatorCount = targetCount;
 
-                // Handle Additions
                 if (targetCount > Actuators.Count)
                 {
                     for (int i = Actuators.Count + 1; i <= targetCount; i++)
                     {
-                        var newChannel = new ActuatorChannel { ChannelId = i, UserId = CurrentUser.UserId };
+                        var newChannel = new ActuatorChannel
+                        {
+                            ChannelId = i,
+                            UserId = CurrentUser.UserId
+                            // Do NOT set User = CurrentUser here — EF will graph-walk
+                            // CurrentUser.Config and try to track App.Config in this new
+                            // context, conflicting with the already-tracked instance.
+                        };
                         db.Channels.Add(newChannel);
                         Actuators.Add(newChannel);
                     }
                 }
-                // Handle Removals
                 else if (targetCount < Actuators.Count)
                 {
                     while (Actuators.Count > targetCount)
                     {
                         var toRemove = Actuators.Last();
                         var dbItem = db.Channels.FirstOrDefault(c => c.Id == toRemove.Id);
-
                         if (dbItem != null) db.Channels.Remove(dbItem);
                         Actuators.Remove(toRemove);
                     }
                 }
 
                 db.SaveChanges();
+                GraphVM?.RebuildSeries();
             }
         }
     }
