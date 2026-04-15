@@ -28,10 +28,10 @@ namespace SMAControlApp.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Define the comparer for List<double>
-                var doubleListComparer = new ValueComparer<List<double>>(
-            (c1, c2) => c1.SequenceEqual(c2),
-            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-            c => c.ToList());
+            var doubleListComparer = new ValueComparer<List<double>>(
+        (c1, c2) => c1.SequenceEqual(c2),
+        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+        c => c.ToList());
 
             modelBuilder.Entity<Configuration>()
                 .Property(e => e.EquationCoefficients)

@@ -101,14 +101,11 @@ namespace SMAControlApp.Models
 
         private void ComputeVoltage()
         {
-<<<<<<< HEAD
-            double raw = App.Config.CalculateVoltage(DesiredDisplacement);
-            RequiredVoltage = Math.Clamp(raw, App.Config.MinVoltage, App.Config.MaxVoltage);
-=======
-            // Note: In a real app, you'd access the User's config via the Navigation Property
-            if (User?.Config != null)
-                RequiredVoltage = User.Config.CalculateVoltage(DesiredDisplacement);
->>>>>>> origin/main
+            var config = App.Config ?? User?.Config;
+            if (config == null) return;
+
+            double raw = config.CalculateVoltage(DesiredDisplacement);
+            RequiredVoltage = Math.Clamp(raw, config.MinVoltage, config.MaxVoltage);
         }
 
         public bool IsRunning
@@ -148,3 +145,4 @@ namespace SMAControlApp.Models
         }
     }
 }
+
