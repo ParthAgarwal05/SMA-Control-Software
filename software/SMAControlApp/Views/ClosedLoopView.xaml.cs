@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static System.Collections.Specialized.BitVector32;
 
 namespace SMAControlApp.Views
 {
@@ -48,17 +49,29 @@ namespace SMAControlApp.Views
                 var config = App.Config;
                 foreach (var actuator in vm.Channels)
                 {
-                    double outputVoltage = config.CalculateVoltage(actuator.DesiredDisplacement) * config.AmplifierGain;
+                    double outputVoltage = config.CalculateVoltage(actuator.DesiredDisplacement);
                     if (outputVoltage > config.MaxVoltage || outputVoltage < config.MinVoltage)
                     {
-                        MessageBox.Show($"Voltage Error on Channel {actuator.ChannelId}. Aborting.", "Safety Error");
+                        MessageBox.Show(
+                            $"Cannot start all actuators!\n\n" +
+                            $"Actuator: {actuator.ChannelId}\n" +
+                            $"Voltage: {outputVoltage:F2} V\n" +
+                            $"Allowed: {config.MinVoltage} V to {config.MaxVoltage} V",
+                            "Voltage Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
                         toggle.IsChecked = false; // Force the UI button back to Green
                         return;
                     }
                 }
 
                 // 2. Confirmation Second
-                var result = MessageBox.Show("Start all actuators?", "Confirm", MessageBoxButton.YesNo);
+                var result = MessageBox.Show(
+                $"Are you sure you want to start all actuators?",
+                "Confirm",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
                 if (result == MessageBoxResult.Yes)
                 {
                     vm.IsAllRunning = true; // This triggers the loop in your ViewModel
@@ -87,10 +100,18 @@ namespace SMAControlApp.Views
             if (actuator.IsRunning) // User just clicked "Start"
             {
                 // 1. Validate Voltage
-                double v = App.Config.CalculateVoltage(actuator.DesiredDisplacement) * App.Config.AmplifierGain;
+                double v = App.Config.CalculateVoltage(actuator.DesiredDisplacement);
                 if (v > App.Config.MaxVoltage || v < App.Config.MinVoltage)
                 {
-                    MessageBox.Show("Voltage Error!");
+                    var config = App.Config;
+                    MessageBox.Show(
+                        $"Voltage out of range!\n\n" +
+                        $"Calculated: {v:F2} V\n" +
+                        $"Allowed: {config.MinVoltage} V to {config.MaxVoltage} V",
+                        "Voltage Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
                     actuator.IsRunning = false; // UI turns Green automatically
                     return;
                 }

@@ -29,7 +29,7 @@ namespace SMAControlApp.Models
             {
                 result += EquationCoefficients[i] * Math.Pow(displacement, EquationCoefficients.Count - i - 1);
             }
-            return result;
+            return result*AmplifierGain;
         }
 
         public int ActuatorCount

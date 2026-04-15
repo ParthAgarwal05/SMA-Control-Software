@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Windows.Media;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
@@ -14,25 +15,39 @@ namespace SMAControlApp.Models
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
 
-        private string _name;
+        public string Name { get; set; }
+
         private bool _isSelected;
-
-        public string Name
-        {
-            get => _name;
-            set { _name = value; OnPropertyChanged(); }
-        }
-
         public bool IsSelected
         {
             get => _isSelected;
-            set { _isSelected = value; OnPropertyChanged(); }
+            set
+            {
+                _isSelected = value;
+                PropertyChanged?.Invoke(this,
+                    new PropertyChangedEventArgs(nameof(IsSelected)));
+            }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        // ── NEW: per-sensor color ─────────────────────────────────────
+        private Color _color = Colors.DeepSkyBlue;
+        [NotMapped]
+        public Color Color
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            get => _color;
+            set
+            {
+                _color = value;
+                PropertyChanged?.Invoke(this,
+                    new PropertyChangedEventArgs(nameof(Color)));
+                PropertyChanged?.Invoke(this,
+                    new PropertyChangedEventArgs(nameof(Brush)));
+            }
         }
+
+        // Convenience brush for XAML binding
+        public SolidColorBrush Brush => new SolidColorBrush(_color);
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

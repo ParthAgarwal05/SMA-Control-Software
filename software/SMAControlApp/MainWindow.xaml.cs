@@ -33,7 +33,11 @@ namespace SMAControlApp
         }
         private void Graph_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = new GraphView();
+            var view = new GraphView();
+            // Use the singleton – never new GraphViewModel() here
+            // A fresh instance would miss all events that already fired
+            view.DataContext = App.GraphVM;
+            MainContent.Content = view;
         }
 
         private void Config_Click(object sender, RoutedEventArgs e)
