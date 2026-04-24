@@ -181,7 +181,7 @@ namespace SMAControlApp.ViewModels
             // Advance tick and record one point per actuator
             _globalTick++;
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < Math.Min(_startTick.Length, count); i++)
             {
                 var actuator = App.Actuators[i];
 

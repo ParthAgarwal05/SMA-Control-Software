@@ -60,7 +60,7 @@ namespace SMAControlApp.Views
 
             for (int i = n; i >= 0; i--)
             {
-                string label = i == 0 ? "a₀ (const)" : $"a{i} · V^{i}";
+                string label = i == 0 ? "a₀ (const)" : $"a{i} · s^{i}";
 
                 var stack = new StackPanel { Margin = new Thickness(0, 0, 10, 0), Width = 90 };
                 stack.Children.Add(new TextBlock
