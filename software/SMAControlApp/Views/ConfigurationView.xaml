@@ -130,8 +130,8 @@
                                     </ItemsControl.ItemsPanel>
                                 </ItemsControl>
                             </ScrollViewer>
-                            <TextBlock Text="One box per coefficient. Example: degree 1 → a1·V + a0"
-                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+                            <TextBlock
+                                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"><Run Text="One box per coefficient. Example: degree 1 → a1·"/><Run Language="en-in" Text="s"/><Run Text=" + a0"/></TextBlock>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
