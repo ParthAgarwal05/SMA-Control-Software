@@ -1,5 +1,9 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using Microsoft.EntityFrameworkCore;
+using SMAControlApp.Data;
+using System.Collections.ObjectModel;
 
 namespace SMAControlApp.Views
 {
@@ -15,19 +19,30 @@ namespace SMAControlApp.Views
             // Clear previous error
             lblError.Text = "";
 
-            string username = txtUsername.Text;
+            string username = txtUsername.Text.Trim();
             string password = txtPassword.Password;
 
-            // Hardcoded check for "User1" and "admin123"
-            if (username == "User1" && password == "admin123")
+            using (var db = new AppDbContext())
             {
-                OnLoginSuccess();
-            }
-            else
-            {
-                lblError.Text = "Invalid username or password.";
-                txtPassword.Clear();
-                txtPassword.Focus();
+                var user = db.Users
+                             .Include(u => u.Config)
+                             .Include(u => u.Actuators)
+                             .FirstOrDefault(u => u.UserName == username && u.PasswordHash == password);
+
+                if (user != null)
+                {
+                    App.CurrentUser = user;
+                    App.Config = user.Config;
+                    App.Actuators = new ObservableCollection<Models.ActuatorChannel>(
+                        user.Actuators.OrderBy(a => a.ChannelId));
+                    OnLoginSuccess();
+                }
+                else
+                {
+                    lblError.Text = "Invalid username or password.";
+                    txtPassword.Clear();
+                    txtPassword.Focus();
+                }
             }
         }
 
@@ -35,12 +50,12 @@ namespace SMAControlApp.Views
         {
             MessageBox.Show("Login Successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
-            // TODO: Add your navigation logic here to switch to the Main Dashboard
-            // Example: ((MainWindow)Application.Current.MainWindow).MainContent.Content = new ConfigurationView();
             if (Application.Current.MainWindow is MainWindow mainWindow)
             {
+                App.GraphVM = new ViewModels.GraphViewModel();
                 mainWindow.LoginArea.Visibility = Visibility.Collapsed;
                 mainWindow.DashboardLayout.Visibility = Visibility.Visible;
+                mainWindow.MainContent.Content = new OpenLoopView();
             }
         }
     }
