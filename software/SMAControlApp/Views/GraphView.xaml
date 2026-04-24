@@ -18,7 +18,7 @@
 
         <!-- ══════════ STATUS BAR ══════════ -->
         <Border Grid.Row="0" Background="#2C3E50" Padding="10,6">
-            <DockPanel>
+            <DockPanel LastChildFill="False">
 
                 <!-- Status text -->
                 <TextBlock Text="{Binding StatusText}"
@@ -39,7 +39,9 @@
                 <Button Content="Save as CSV"
                         Click="SaveButton_Click"
                         DockPanel.Dock="Right"
-                        Padding="14,4"
+                        Padding="8,3"
+                        FontSize="11"
+                        Height="24"
                         Cursor="Hand"
                         Background="#27AE60" Foreground="White"
                         BorderThickness="0"

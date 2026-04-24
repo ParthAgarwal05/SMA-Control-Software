@@ -20,7 +20,6 @@ namespace SMAControlApp
         public MainWindow()
         {
             InitializeComponent();
-            MainContent.Content = new OpenLoopView();
         }
         private void OpenLoop_Click(object sender, RoutedEventArgs e)
         {

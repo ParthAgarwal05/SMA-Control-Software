@@ -77,6 +77,49 @@ namespace SMAControlApp.Views
             }
         }
 
+        private void ChangePassword_Click(object sender, RoutedEventArgs e)
+        {
+            PasswordErrorText.Text = "";
+
+            string current = CurrentPasswordBox.Password;
+            string newPwd = NewPasswordBox.Password;
+            string confirm = ConfirmPasswordBox.Password;
+
+            if (current != App.CurrentUser.PasswordHash)
+            {
+                PasswordErrorText.Text = "Current password is incorrect.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(newPwd))
+            {
+                PasswordErrorText.Text = "New password cannot be empty.";
+                return;
+            }
+
+            if (newPwd != confirm)
+            {
+                PasswordErrorText.Text = "New passwords do not match.";
+                return;
+            }
+
+            using (var db = new AppDbContext())
+            {
+                var dbUser = db.Users.FirstOrDefault(u => u.UserId == App.CurrentUser.UserId);
+                if (dbUser != null)
+                {
+                    dbUser.PasswordHash = newPwd;
+                    db.SaveChanges();
+                    App.CurrentUser.PasswordHash = newPwd;
+                }
+            }
+
+            CurrentPasswordBox.Clear();
+            NewPasswordBox.Clear();
+            ConfirmPasswordBox.Clear();
+            MessageBox.Show("Password changed successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             // 1. Validation
